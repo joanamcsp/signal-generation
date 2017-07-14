@@ -1,18 +1,159 @@
 <?xml version="1.0" encoding="utf-8"?>
-<android.support.constraint.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:app="http://schemas.android.com/apk/res-auto"
-    xmlns:tools="http://schemas.android.com/tools"
+
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    tools:context="android.projects.jp.wavegenerator.MainActivity">
+    android:orientation="vertical"
+    android:padding="16dp">
 
     <TextView
-        android:layout_width="wrap_content"
+        android:id="@+id/frequencyLabel"
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="Hello World!"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintLeft_toLeftOf="parent"
-        app:layout_constraintRight_toRightOf="parent"
-        app:layout_constraintTop_toTopOf="parent" />
+        android:layout_gravity="center"
+        android:textAlignment="center"
+        android:text="FREQUENCY hZ" />
+    <RelativeLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:padding="16dp"
+        android:layout_marginBottom="50dp"
+        android:layout_marginLeft="30dp"
+        android:layout_marginRight="30dp">
+        <Button
+            android:id="@+id/buttonFrequencyIncrease"
+            android:layout_width="40pt"
+            android:layout_height="25pt"
+            android:text="+"
+            android:textSize="10pt"
+            android:background="@color/colorButtons"
+            android:textColor="@color/colorButtonText"
+            android:layout_alignParentRight="true"/>
 
-</android.support.constraint.ConstraintLayout>
+        <TextView
+            android:id="@+id/frequency"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center"
+            android:textAlignment="center"
+            android:layout_centerInParent="true"/>
+
+        <Button
+            android:id="@+id/buttonFrequencyDecrease"
+            android:layout_width="40pt"
+            android:layout_height="25pt"
+            android:text="-"
+            android:textSize="10pt"
+            android:background="@color/colorButtons"
+            android:textColor="@color/colorButtonText" />
+    </RelativeLayout>
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="50pt"
+        android:orientation="vertical"
+        android:padding="16dp">
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal">
+            <TextView
+                android:id="@+id/currentVolumeLeft"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:textAlignment="center"
+                android:paddingLeft="130dp"
+                android:paddingRight="5dp"
+                android:paddingBottom="10pt" />
+            <TextView
+                android:id="@+id/volumeLeftLabel"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="dB"
+                android:paddingRight="70dp"
+                android:paddingLeft="5dp"
+                android:layout_weight="1"
+                android:layout_gravity="center"
+                android:paddingBottom="10pt"/>
+
+        </LinearLayout>
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal">
+            <SeekBar
+                android:id="@+id/volumeLeftSlider"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_weight="2"/>
+            <TextView
+                android:id="@+id/sideLeft"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:textAlignment="center"
+                android:text="L" />
+        </LinearLayout>
+
+    </LinearLayout>
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="50pt"
+        android:orientation="vertical"
+        android:padding="16dp">
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal">
+            <TextView
+                android:id="@+id/currentVolumeRight"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:textAlignment="center"
+                android:paddingLeft="130dp"
+                android:paddingRight="5dp"
+                android:paddingBottom="10pt" />
+            <TextView
+                android:id="@+id/volumeRightLabel"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="dB"
+                android:paddingRight="70dp"
+                android:paddingLeft="5dp"
+                android:layout_weight="1"
+                android:layout_gravity="center"
+                android:paddingBottom="10pt"/>
+        </LinearLayout>
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal">
+            <SeekBar
+                android:id="@+id/volumeRightSlider"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_weight="2"/>
+            <TextView
+                android:id="@+id/sideRight"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:textAlignment="center"
+                android:text="R"/>
+
+        </LinearLayout>
+    </LinearLayout>
+
+    <RelativeLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent">
+        <Button
+            android:id="@+id/buttonPlay"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:background="@color/colorAccent"
+            android:text="play"
+            android:textColor="@color/colorButtonText"
+            android:layout_alignParentBottom="true"/>
+    </RelativeLayout>
+
+</LinearLayout>
