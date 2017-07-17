@@ -1,7 +1,6 @@
 package android.projects.jp.wavegenerator;
 
 import android.projects.jp.wavegenerator.wave_generators.SineWaveGenerator;
-import android.projects.jp.wavegenerator.wave_generators.helpers.AudioSettings;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.view.View;
@@ -25,18 +24,17 @@ public class MainActivity extends AppCompatActivity {
     private void bindControls(){
 
         final TextView currentFrequency = (TextView) findViewById(R.id.frequency);
-        currentFrequency.setText(String.valueOf(AudioSettings.DEFAULT_FREQUENCY));
+        currentFrequency.setText(String.valueOf(sw.getFrequency()));
 
         Button buttonFrequencyIncrease = (Button) findViewById(R.id.buttonFrequencyIncrease);
         buttonFrequencyIncrease.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 int frequency = Integer.parseInt(currentFrequency.getText().toString());
-                if(frequency + AudioSettings.FREQ_STEP <= AudioSettings.MAX_FREQ){
-                    frequency += AudioSettings.FREQ_STEP;
+                if(frequency + sw.FREQUENCY_STEP <= sw.MAX_FREQUENCY){
+                    frequency += sw.FREQUENCY_STEP;
                     sw.setFrequency(frequency);
-                    String displayText = frequency + "";
-                    currentFrequency.setText(displayText);
+                    currentFrequency.setText(String.valueOf(frequency));
                 }
             }
         });
@@ -46,23 +44,21 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void onClick(View v) {
                 int frequency = Integer.parseInt(currentFrequency.getText().toString());
-                if(frequency - AudioSettings.FREQ_STEP >= AudioSettings.MIN_FREQ){
-                    frequency  -= AudioSettings.FREQ_STEP;
+                if(frequency - sw.FREQUENCY_STEP >= 0){
+                    frequency  -= sw.FREQUENCY_STEP;
                     sw.setFrequency(frequency);
-                    String displayText = frequency + "";
-                    currentFrequency.setText(displayText);
+                    currentFrequency.setText(String.valueOf(frequency));
                 }
             }
         });
 
+        int volumeLeft = sw.getLeftVolume();
         final TextView currentVolumeLeft = (TextView) findViewById(R.id.currentVolumeLeft);
-        currentVolumeLeft.setText(String.valueOf(AudioSettings.DEFAULT_VOLUME));
-
-        final TextView currentVolumeRight = (TextView) findViewById(R.id.currentVolumeRight);
-        currentVolumeRight.setText(String.valueOf(AudioSettings.DEFAULT_VOLUME));
+        currentVolumeLeft.setText(String.valueOf(volumeLeft));
 
         final SeekBar volumeLeftSlider = (SeekBar) findViewById(R.id.volumeLeftSlider);
-        volumeLeftSlider.setMax(AudioSettings.DEVICE_CLIPPING_POINT_IN_DB);
+        volumeLeftSlider.setMax(sw.getMaxVolume());
+        volumeLeftSlider.setProgress(volumeLeft);
         volumeLeftSlider.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
             @Override
             public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
@@ -83,8 +79,13 @@ public class MainActivity extends AppCompatActivity {
             }
         });
 
+        int volumeRight = sw.getRightVolume();
+        final TextView currentVolumeRight = (TextView) findViewById(R.id.currentVolumeRight);
+        currentVolumeRight.setText(String.valueOf(volumeRight));
+
         final SeekBar volumeRightSlider = (SeekBar) findViewById(R.id.volumeRightSlider);
-        volumeRightSlider.setMax(AudioSettings.DEVICE_CLIPPING_POINT_IN_DB);
+        volumeRightSlider.setMax(sw.getMaxVolume());
+        volumeRightSlider.setProgress(volumeRight);
         volumeRightSlider.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
             @Override
             public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {

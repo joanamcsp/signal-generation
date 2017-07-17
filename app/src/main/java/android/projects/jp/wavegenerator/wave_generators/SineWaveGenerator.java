@@ -1,126 +1,74 @@
 package android.projects.jp.wavegenerator.wave_generators;
 
-import android.media.AudioFormat;
+import                 android.media.AudioFormat;
 import android.media.AudioManager;
+import android.media.AudioRecord;
 import android.media.AudioTrack;
-import android.projects.jp.wavegenerator.wave_generators.helpers.AudioSettings;
 import android.util.Log;
-
-/**
- * Created on 10/07/2017.
- */
+import android.widget.Toast;
 
 public class SineWaveGenerator {
 
+    private final String TAG = this.getClass().getSimpleName();
     private AudioTrack mAudioTrack;
-    private final String LOG_TAG = this.getClass().getSimpleName();
-    private int mNumberOfSamplesPerChannel;
-    private double mSampleRate;
-    private short[] bufferStereo;
-    private boolean mPlaying;
+    public static final int MAX_FREQUENCY = AudioSettings.MAX_FREQ;
+    public static final int FREQUENCY_STEP = AudioSettings.FREQ_STEP;
+    private final double mSampleRate = AudioSettings.SAMPLE_RATE;;
     private int mFrequency;
     private double mLeftAmplitude;
     private double mRightAmplitude;
-    private double currentAmplitudeFadeFactor = 0;
+    private double mCurrentAmplitudeFadeFactor;
     private double mAmplitudeFadeIncrement;
+    private short[] mBufferStereo;
+    private int mBufferSize;
+    private boolean mPlaying;
     private boolean mFadingOut;
 
 
-    public SineWaveGenerator(double sampleRate) {
-
-        mSampleRate = sampleRate;
-        //TODO: filter for unsupported values
+    public SineWaveGenerator() {
+        mFrequency = AudioSettings.DEFAULT_FREQUENCY;
+        mLeftAmplitude = dBToAmplitude(AudioSettings.DEFAULT_VOLUME);
+        mRightAmplitude = dBToAmplitude(AudioSettings.DEFAULT_VOLUME);
     }
 
     private void init(){
 
-        mNumberOfSamplesPerChannel = (int)(AudioSettings.GENERATED_AUDIO_DURATION_IN_SECONDS * mSampleRate);
+        int minBufferSize= AudioTrack.getMinBufferSize((int)AudioSettings.SAMPLE_RATE, AudioFormat.CHANNEL_OUT_STEREO, AudioFormat.ENCODING_PCM_16BIT);
+        double duration = minBufferSize / AudioSettings.SAMPLE_RATE;
+        //buffersize should be multiple of sample rate to avoid clicking during playback
+        duration  = roundToNDecimalCases(duration, 1);
 
+        mBufferSize = (int) (duration * AudioSettings.SAMPLE_RATE);
         mAudioTrack = new AudioTrack(AudioManager.STREAM_MUSIC,
                 (int)mSampleRate,
                 AudioFormat.CHANNEL_OUT_STEREO,
                 AudioFormat.ENCODING_PCM_16BIT,
-                mNumberOfSamplesPerChannel * AudioSettings.BLOCK_ALIGN,
+                mBufferSize,
                 AudioTrack.MODE_STREAM);
 
-        Log.i(this.toString(), "AudioTrack successfully initialized");
+        Log.i(TAG, "AudioTrack successfully initialized with " + mSampleRate + " sample rate.");
+        setUpToneFade();
+    }
 
+    private double roundToNDecimalCases(double value, int n){
+        double factor = 10 * n;
+        return Math.round(value * factor) / factor;
+    }
+
+    private void setUpToneFade(){
+        //fade in and out over 10 % first and last sample
+        double amplitudeFadeRamp = mBufferSize / 10;
+        mAmplitudeFadeIncrement = 1 / amplitudeFadeRamp;
+        mCurrentAmplitudeFadeFactor = 0;
         mFadingOut = false;
-        currentAmplitudeFadeFactor = 0;
     }
 
-    private void reset(){
-        if(mAudioTrack == null)return;
-        if(mAudioTrack.getPlayState() == AudioTrack.PLAYSTATE_PLAYING){
-            mFadingOut = true;
-            mPlaying = false;
-            mAudioTrack.stop();
-        }
-        Log.d(this.toString(), "AudioTrack stopped");
-    }
-
-    private double dBToAmplitude(double dB)
-    {
-        //- sign because resulting value will be the difference from reference max dB level
-        return Math.pow(10, -(AudioSettings.DEVICE_CLIPPING_POINT_IN_DB - (dB)) / 20.0);
-    }
-
-    private void buildStereoBuffer(int numberOfSamplesPerChannel) {
-
-        bufferStereo = new short[numberOfSamplesPerChannel * AudioSettings.NUMBER_OF_CHANNELS];
-        double ramp = bufferStereo.length / 20;
-        mAmplitudeFadeIncrement = 1 / ramp;
-
-        for(int sample = 0; sample < bufferStereo.length; sample += 2){
-            double time = sample / mSampleRate;
-            short wavePoint = (short)(Math.sin(2 * Math.PI * mFrequency * time)  *  AudioSettings.MAX_AMPLITUDE * currentAmplitudeFadeFactor);
-            bufferStereo[sample] = (short)(wavePoint * mLeftAmplitude);
-            bufferStereo[sample + 1] = (short)(wavePoint * mRightAmplitude);
-        }
-        applyAmplitudeFade();
-    }
-
-    /// <summary>
-    /// Fade in and fade out of amplitude over 10% of samples to avoid clicks when starting and stopping playback
-    /// </summary>
-    private void applyAmplitudeFade()
-    {
-        if (mFadingOut)
-        {
-            if (currentAmplitudeFadeFactor > 0 + mAmplitudeFadeIncrement)
-            {
-                currentAmplitudeFadeFactor -= mAmplitudeFadeIncrement;
-            }
-        }
-        else
-        {
-            if (currentAmplitudeFadeFactor < 1 - mAmplitudeFadeIncrement)
-            {
-                currentAmplitudeFadeFactor += mAmplitudeFadeIncrement;
-            }
-        }
-    }
-
-    private double preventClipping(double amplitude){
-
-        return amplitude > AudioSettings.MAX_NORMALIZED_AMPLITUDE ? AudioSettings.MAX_NORMALIZED_AMPLITUDE : amplitude;
-    }
-
-    public void playTone(int frequency, double  leftVolume, double rightVolume){
+    public void playTone(){
 
         init();
 
-        double leftAmplitude = dBToAmplitude(leftVolume);
-        double rightAmplitude = dBToAmplitude(rightVolume);
-        Log.d(LOG_TAG, "Left amplitude: " + leftAmplitude + " Right amplitude: " + rightAmplitude);
-
-
-        preventClipping(leftAmplitude);
-        preventClipping(rightAmplitude);
-
-        mFrequency = frequency;
-        mLeftAmplitude = leftAmplitude;
-        mRightAmplitude = rightAmplitude;
+        preventClipping(mLeftAmplitude);
+        preventClipping(mRightAmplitude);
 
         if (mAudioTrack.getState() == AudioTrack.STATE_INITIALIZED) {
             mAudioTrack.play();
@@ -130,38 +78,112 @@ public class SineWaveGenerator {
         final Thread thread = new Thread(new Runnable() {
             public void run() {
 
-                while(mPlaying)
-                {
-                    buildStereoBuffer(mNumberOfSamplesPerChannel);
-                    mAudioTrack.write(bufferStereo, 0, bufferStereo.length);
-                }
-
+                    while(mPlaying)
+                    {
+                        buildStereoBuffer(mBufferSize);
+                        mAudioTrack.write(mBufferStereo, 0, mBufferStereo.length);
+                    }
             }
         });
         thread.start();
-        Log.v(this.toString(), "AudioTrack playing...");
+        Log.i(TAG, "AudioTrack started playing at " + mFrequency + " hZ." );
 
     }
 
+    private double preventClipping(double amplitude){
+
+        return amplitude > AudioSettings.MAX_NORMALIZED_AMPLITUDE ? AudioSettings.MAX_NORMALIZED_AMPLITUDE : amplitude;
+    }
+
+    private void buildStereoBuffer(int bufferSize) {
+
+        mBufferStereo = new short[bufferSize];
+
+        for(int sampleIndex = 0, sampleNumber = 0; sampleIndex < mBufferStereo.length ; sampleIndex += 2, sampleNumber++){
+            double time = sampleNumber / mSampleRate;
+            double wavePoint = Math.sin(2.0  * Math.PI * mFrequency * time) * AudioSettings.MAX_AMPLITUDE  * mCurrentAmplitudeFadeFactor;
+            mBufferStereo[sampleIndex] = (short)(wavePoint * mLeftAmplitude) ;
+            mBufferStereo[sampleIndex + 1] = (short)(wavePoint * mRightAmplitude) ;
+            // Fade in and fade out of amplitude over 10% of samples to avoid clicks when starting and stopping playback
+            applyAmplitudeFade();
+        }
+    }
+
+    private void applyAmplitudeFade()
+    {
+        if (mFadingOut)
+        {
+           if (mCurrentAmplitudeFadeFactor > mAmplitudeFadeIncrement)
+            {
+                mCurrentAmplitudeFadeFactor -= mAmplitudeFadeIncrement;
+            }
+        }
+        else
+        {
+            if (mCurrentAmplitudeFadeFactor < 1.0 - mAmplitudeFadeIncrement)
+            {
+                mCurrentAmplitudeFadeFactor += mAmplitudeFadeIncrement;
+
+            }
+        }
+    }
+
     public void stop(){
-        reset();
-        mAudioTrack.release();
-        Log.d(this.toString(), "AudioTrack released");
+        close();
+        Log.i(TAG, "AudioTrack released");
+    }
+
+    private void close() {
+        if(mAudioTrack == null)return;
+        if(mAudioTrack.getPlayState() == AudioTrack.PLAYSTATE_PLAYING){
+            mFadingOut = true;
+            mAudioTrack.stop();
+            mAudioTrack.release();
+            mPlaying = false;
+        }
+        Log.i(TAG, "AudioTrack stopped");
     }
 
     public boolean isPlaying(){
         return mPlaying;
     }
 
-    public void setmLeftAmplitude(int amplitude){
-        mLeftAmplitude = dBToAmplitude(amplitude);
+    public int getFrequency(){
+        return mFrequency;
     }
 
-    public void setmRightAmplitude(int amplitude){
-        mRightAmplitude = dBToAmplitude(amplitude);
+    public void setFrequency(int frequency) {
+        mFrequency = frequency;
     }
 
-    public void setmFrequency(int mFrequency) {
-        this.mFrequency = mFrequency;
+    public void setLeftVolume(int volume){
+        mLeftAmplitude = dBToAmplitude(volume);
     }
+
+    public void setRightVolume(int volume){
+        mRightAmplitude = dBToAmplitude(volume);
+    }
+
+    public int getLeftVolume(){
+        return amplitudeToDb(mLeftAmplitude);
+    }
+
+    public int getRightVolume(){
+        return amplitudeToDb(mRightAmplitude);
+    }
+
+    public int getMaxVolume(){
+        return AudioSettings.DEVICE_CLIPPING_POINT_IN_DB;
+    }
+
+    private double dBToAmplitude(double dB) {
+        //- sign because resulting value will be the difference from reference max dB level
+        return Math.pow(10, -(AudioSettings.DEVICE_CLIPPING_POINT_IN_DB - (dB)) / 20.0);
+    }
+
+    private int amplitudeToDb(double amplitude)
+    {
+        return (int)(20 * Math.log10(amplitude) + 96);// 0 amplitude should yield -96
+    }
+
 }
