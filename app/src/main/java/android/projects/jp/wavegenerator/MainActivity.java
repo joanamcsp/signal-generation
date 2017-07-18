@@ -1,5 +1,6 @@
 package android.projects.jp.wavegenerator;
 
+import android.projects.jp.wavegenerator.wave_generators.ControlsConfiguration;
 import android.projects.jp.wavegenerator.wave_generators.SineWaveGenerator;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
@@ -10,30 +11,30 @@ import android.widget.TextView;
 
 public class MainActivity extends AppCompatActivity {
 
-    SineWaveGenerator sw;
+    SineWaveGenerator sineGenerator;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        sw = new SineWaveGenerator();
+        sineGenerator = new SineWaveGenerator();
         bindControls();
     }
 
     private void bindControls(){
 
         final TextView currentFrequency = (TextView) findViewById(R.id.frequency);
-        currentFrequency.setText(String.valueOf(sw.getFrequency()));
+        currentFrequency.setText(String.valueOf(sineGenerator.getFrequency()));
 
         Button buttonFrequencyIncrease = (Button) findViewById(R.id.buttonFrequencyIncrease);
         buttonFrequencyIncrease.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 int frequency = Integer.parseInt(currentFrequency.getText().toString());
-                if(frequency + sw.FREQUENCY_STEP <= sw.MAX_FREQUENCY){
-                    frequency += sw.FREQUENCY_STEP;
-                    sw.setFrequency(frequency);
+                if(frequency + sineGenerator.getFrequencyStep() <= sineGenerator.getMaxFrequency()){
+                    frequency += sineGenerator.getFrequencyStep();
+                    sineGenerator.setFrequency(frequency);
                     currentFrequency.setText(String.valueOf(frequency));
                 }
             }
@@ -44,27 +45,27 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void onClick(View v) {
                 int frequency = Integer.parseInt(currentFrequency.getText().toString());
-                if(frequency - sw.FREQUENCY_STEP >= 0){
-                    frequency  -= sw.FREQUENCY_STEP;
-                    sw.setFrequency(frequency);
+                if(frequency - sineGenerator.getFrequencyStep() >= 0){
+                    frequency  -= sineGenerator.getFrequencyStep();
+                    sineGenerator.setFrequency(frequency);
                     currentFrequency.setText(String.valueOf(frequency));
                 }
             }
         });
 
-        int volumeLeft = sw.getLeftVolume();
+        int volumeLeft = sineGenerator.getLeftVolume();
         final TextView currentVolumeLeft = (TextView) findViewById(R.id.currentVolumeLeft);
         currentVolumeLeft.setText(String.valueOf(volumeLeft));
 
         final SeekBar volumeLeftSlider = (SeekBar) findViewById(R.id.volumeLeftSlider);
-        volumeLeftSlider.setMax(sw.getMaxVolume());
+        volumeLeftSlider.setMax(sineGenerator.getMaxVolume());
         volumeLeftSlider.setProgress(volumeLeft);
         volumeLeftSlider.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
             @Override
             public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
 
                 currentVolumeLeft.setText(String.valueOf(progress));
-                sw.setLeftVolume(progress);
+                sineGenerator.setLeftVolume(progress);
 
             }
 
@@ -79,19 +80,19 @@ public class MainActivity extends AppCompatActivity {
             }
         });
 
-        int volumeRight = sw.getRightVolume();
+        int volumeRight = sineGenerator.getRightVolume();
         final TextView currentVolumeRight = (TextView) findViewById(R.id.currentVolumeRight);
         currentVolumeRight.setText(String.valueOf(volumeRight));
 
         final SeekBar volumeRightSlider = (SeekBar) findViewById(R.id.volumeRightSlider);
-        volumeRightSlider.setMax(sw.getMaxVolume());
+        volumeRightSlider.setMax(sineGenerator.getMaxVolume());
         volumeRightSlider.setProgress(volumeRight);
         volumeRightSlider.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
             @Override
             public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
 
                 currentVolumeRight.setText(String.valueOf(progress));
-                sw.setRightVolume(progress);
+                sineGenerator.setRightVolume(progress);
 
             }
 
@@ -111,14 +112,16 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void onClick(View v) {
 
-                if(sw.isPlaying()){
-                    sw.stop();
+                if(sineGenerator.isPlaying()){
+                    sineGenerator.stop();
                     buttonPlay.setText("Play");
                 } else {
-                    sw.playTone();
+                    sineGenerator.playTone();
                     buttonPlay.setText("Stop");
                 }
             }
         });
+
     }
+
 }
