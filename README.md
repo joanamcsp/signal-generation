@@ -1,4 +1,4 @@
-# SignalGeneration #
+# signal-generation
 
 
 Simple app to for PCM audio generation on Android devices. 
